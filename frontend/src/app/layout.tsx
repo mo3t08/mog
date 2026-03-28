@@ -1,27 +1,40 @@
 import type { Metadata } from "next";
+import { Oswald, Roboto } from "next/font/google";
 import "./globals.css";
 
+const oswald = Oswald({
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const roboto = Roboto({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Muerte o Gloria Barbershop — Reserva tu cita",
-  description: "Reserva tu cita online en Muerte o Gloria Barbershop. Cortes, barbas, rituales premium.",
+  title: "MOG Barbería — Reserva tu cita",
+  description: "Reserva tu corte en MOG Barbería.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="es">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         />
       </head>
-      <body>{children}</body>
+      <body className={`${oswald.variable} ${roboto.variable}`}>{children}</body>
     </html>
   );
 }

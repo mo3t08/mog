@@ -1,43 +1,60 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: reservas_postgres
+    container_name: mog_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-barberia}
+      POSTGRES_USER: ${POSTGRES_USER:-barberia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
-      - "5432:5432"
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-barberia}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: reservas_backend
+    container_name: mog_backend
     restart: unless-stopped
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      JWT_SECRET: ${JWT_SECRET}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
-      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
-      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
+      TZ: Europe/Madrid
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-barberia}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-barberia}
+      CORS_ORIGIN: http://localhost:3010
+      NOTIFY_EMAIL_ENABLED: ${NOTIFY_EMAIL_ENABLED:-true}
+      NOTIFY_WHATSAPP_ENABLED: ${NOTIFY_WHATSAPP_ENABLED:-true}
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      NOTIFY_FROM_EMAIL: ${NOTIFY_FROM_EMAIL:-no-reply@mog.local}
+      NOTIFY_FROM_NAME: ${NOTIFY_FROM_NAME:-MOG Barber}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:4000}
+      TEST_NOTIFY_EMAIL: ${TEST_NOTIFY_EMAIL:-}
+      TEST_NOTIFY_PHONE: ${TEST_NOTIFY_PHONE:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-whatsapp:+14155238886}
+      MSG_STYLE: ${MSG_STYLE:-rich}
     ports:
-      - "3001:3001"
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -46,29 +63,26 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: reservas_frontend
+    container_name: mog_frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       NODE_ENV: development
-      PORT: 3000
-      NEXT_PUBLIC_API_URL: http://backend:3001
+      BACKEND_URL: http://backend:4000
     ports:
-      - "3000:3000"
+      - "3010:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
 
-  adminer:
-    image: adminer
-    container_name: reservas_adminer
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    ports:
-      - "8080:8080"
-
 volumes:
-  postgres_data:
+  pgdata:

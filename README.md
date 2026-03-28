@@ -1,4 +1,21 @@
-# Reservas App — Sistema de Citas para Barbería
+# MOG
+
+Nueva app base sobre Next.js y Docker, creada tras eliminar por completo el proyecto anterior.
+
+## Desarrollo
+
+```bash
+npm install
+npm run dev
+```
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+La app queda disponible en `http://localhost:3010`.# Reservas App — Sistema de Citas para Barbería
 
 App de reservas estilo Calendly, construida desde cero con Docker.
 
@@ -9,7 +26,7 @@ App de reservas estilo Calendly, construida desde cero con Docker.
 | **Frontend** | Next.js 15 / React 19 / TypeScript / Tailwind v4 | 3000 |
 | **Backend** | Express / TypeScript / Prisma ORM | 3001 |
 | **Base de datos** | PostgreSQL 16 | 5432 |
-| **Adminer** | Interfaz web para BD | 8080 |
+| **Adminer** | Interfaz web para BD | 8082 |
 
 ## Inicio rápido
 
@@ -26,7 +43,7 @@ docker exec -it reservas_backend npx prisma migrate dev
 # 4. Abrir en navegador
 #    Frontend:  http://localhost:3000
 #    Backend:   http://localhost:3001
-#    Adminer:   http://localhost:8080
+#    Adminer:   http://localhost:8082
 ```
 
 ## Comandos útiles
@@ -78,7 +95,7 @@ docker exec -it reservas_backend npx prisma studio
 4. 🔲 Flujo de reserva completo
 5. 🔲 Integración Google Calendar
 6. 🔲 Emails de confirmación/recordatorio
-7. 🔲 WhatsApp (último)
+7. ✅ WhatsApp Cloud API para notificaciones y recordatorios
 
 ## Estructura
 
